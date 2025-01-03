@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { differenceInSeconds, format } from 'date-fns';
 import { CircularProgressbar, buildStyles } from 'react-circular-progressbar';
 import 'react-circular-progressbar/dist/styles.css';
+import ConfigModal from './components/ConfigModal';
 
 const teamMembers = ['Gemeinsam', 'Vera', 'Stefan', 'Alex', 'tbd'];
 
@@ -64,7 +65,7 @@ const TaskForm = ({ onAddTask }) => {
   const [taskName, setTaskName] = useState('');
   const [subtitle, setSubtitle] = useState('');
   const [dueDate, setDueDate] = useState('');
-  const [team, setTeam] = useState('Gemeinsam');
+  const [team, setTeam] = useState(teamMembers[0]);
 
   const handleSubmit = (e) => {
     e.preventDefault();
@@ -79,6 +80,7 @@ const TaskForm = ({ onAddTask }) => {
       setTaskName('');
       setSubtitle('');
       setDueDate('');
+      setTeam(teamMembers[0]);
     }
   };
 
@@ -131,7 +133,6 @@ const Timeline = ({ targetDate }) => {
     let currentDate = new Date(targetDate);
     currentDate.setHours(0, 0, 0, 0);
     
-    // Generate 30 days backwards from target date
     for (let i = 29; i >= 0; i--) {
       const date = new Date(currentDate);
       date.setDate(date.getDate() - i);
@@ -176,7 +177,7 @@ const Swimlane = ({ member, tasks, onDeleteTask, onEditTask, startDate }) => {
   const calculateTaskPosition = (task) => {
     const taskDate = new Date(task.dueDate);
     const dayIndex = Math.floor((taskDate - startDate) / (1000 * 60 * 60 * 24));
-    return `${dayIndex * (100 + 8)}px`; // 100px is the minimum column width, 8px for gap
+    return `${dayIndex * (100 + 8)}px`;
   };
 
   return (
@@ -194,21 +195,37 @@ const Swimlane = ({ member, tasks, onDeleteTask, onEditTask, startDate }) => {
             <h4 className="text-sm font-medium">{task.name}</h4>
             {task.subtitle && <p className="text-xs text-gray-600">{task.subtitle}</p>}
             <div className="flex gap-1 mt-2">
-              <button onClick={() => onEditTask(task)} className="bg-yellow-500 text-white px-2 py-1 rounded text-xs">Edit</button>
-              <button onClick={() => onDeleteTask(task.id)} className="bg-red-500 text-white px-2 py-1 rounded text-xs">Delete</button>
+              <button onClick={() => onEditTask(task)} className="p-1.5 text-blue-600 hover:bg-blue-100 rounded-full transition-colors" title="Edit task">
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                </svg>
+              </button>
+              <button onClick={() => onDeleteTask(task.id)} className="p-1.5 text-red-600 hover:bg-red-100 rounded-full transition-colors" title="Delete task">
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                </svg>
+              </button>
             </div>
           </div>
         ))}
       </div>
+      <div className="swimlane-separator"></div>
     </div>
   );
 };
 
 const App = () => {
   const [tasks, setTasks] = useState([]);
-  const [targetDate] = useState(new Date('2025-01-31T15:09:00'));
-  const [title, setTitle] = useState('T-Minus Plan AWS Antrag V1');
-  const startDate = new Date(targetDate);
+  const [isConfigOpen, setIsConfigOpen] = useState(false);
+  const [config, setConfig] = useState({
+    title: 'T-Minus Plan AWS Antrag V1',
+    targetDate: new Date('2025-01-31T15:09:00').toISOString().slice(0, 16),
+    teamMembers: ['Gemeinsam', 'Vera', 'Stefan', 'Alex', 'tbd'],
+    theme: 'default',
+    showWeekends: true
+  });
+
+  const startDate = new Date(config.targetDate);
   startDate.setDate(startDate.getDate() - 29);
 
   const handleAddTask = (newTask) => {
@@ -225,8 +242,13 @@ const App = () => {
     ));
   };
 
+  const handleConfigSave = (newConfig) => {
+    setConfig(newConfig);
+  };
+
   const calculateOverallProgress = () => {
-    if (!targetDate) return 0;
+    if (!config.targetDate) return 0;
+    const targetDate = new Date(config.targetDate);
     const totalSeconds = differenceInSeconds(targetDate, new Date());
     const elapsedSeconds = differenceInSeconds(new Date(), new Date());
     return Math.max(0, Math.min(100, (elapsedSeconds / totalSeconds) * 100));
@@ -234,13 +256,21 @@ const App = () => {
 
   return (
     <div className="app-container">
-      <EditableTitle 
-        initialTitle={title} 
-        onSave={setTitle}
-      />
+      <div className="flex justify-between items-center mb-4">
+        <EditableTitle 
+          initialTitle={config.title} 
+          onSave={(title) => setConfig({ ...config, title })}
+        />
+        <button
+          onClick={() => setIsConfigOpen(true)}
+          className="px-4 py-2 bg-gray-500 text-white rounded hover:bg-gray-600"
+        >
+          Configure Plan
+        </button>
+      </div>
       <div className="mb-4">
         <div className="flex items-center gap-4">
-          <h2 className="text-xl">Target Date: {targetDate.toLocaleString()}</h2>
+          <h2 className="text-xl">Target Date: {new Date(config.targetDate).toLocaleString()}</h2>
           <div style={{ width: 40, height: 40 }}>
             <CircularProgressbar
               value={calculateOverallProgress()}
@@ -257,9 +287,9 @@ const App = () => {
         <TaskForm onAddTask={handleAddTask} />
       </div>
       <div className="timeline-container">
-        <Timeline targetDate={targetDate} />
+        <Timeline targetDate={new Date(config.targetDate)} showWeekends={config.showWeekends} />
         <div className="swimlanes">
-          {teamMembers.map((member) => (
+          {config.teamMembers.map((member) => (
             <Swimlane
               key={member}
               member={member}
@@ -271,6 +301,12 @@ const App = () => {
           ))}
         </div>
       </div>
+      <ConfigModal
+        isOpen={isConfigOpen}
+        onClose={() => setIsConfigOpen(false)}
+        config={config}
+        onSave={handleConfigSave}
+      />
     </div>
   );
 };

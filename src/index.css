@@ -84,4 +84,25 @@
   position: absolute;
   min-width: 120px;
   z-index: 1;
+  transition: all 0.2s ease;
+}
+
+.task-card:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+/* Add a full-width separator for swimlanes */
+.swimlane {
+  position: relative;
+}
+
+.swimlane::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 2px;
+  background: #e5e7eb;
 }
