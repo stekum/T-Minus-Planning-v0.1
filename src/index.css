@@ -1,0 +1,84 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+.app-container {
+  padding: 1rem;
+  min-height: 100vh;
+  background-color: white;
+}
+
+.timeline-container {
+  border: 1px solid #e5e7eb;
+  border-radius: 0.5rem;
+  overflow: auto;
+}
+
+.timeline-dates {
+  display: grid;
+  grid-template-columns: [labels] 150px repeat(30, minmax(100px, 1fr));
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.timeline-date {
+  padding: 0.5rem;
+  text-align: center;
+  font-size: 0.875rem;
+  border-right: 1px solid #e5e7eb;
+}
+
+.timeline-date:first-child {
+  border-right: 2px solid #e5e7eb;
+}
+
+.timeline-phases {
+  display: grid;
+  grid-template-columns: [labels] 150px repeat(30, minmax(100px, 1fr));
+}
+
+.timeline-phase {
+  padding: 0.5rem;
+  text-align: center;
+  font-size: 0.875rem;
+  color: white;
+  grid-column: span 3;
+  border-right: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.swimlanes {
+  display: flex;
+  flex-direction: column;
+}
+
+.swimlane {
+  display: grid;
+  grid-template-columns: [labels] 150px [timeline] 1fr;
+  border-bottom: 1px solid #e5e7eb;
+  min-height: 100px;
+}
+
+.swimlane-header {
+  padding: 1rem;
+  background: #f9fafb;
+  border-right: 2px solid #e5e7eb;
+  font-weight: 500;
+  grid-column: labels;
+}
+
+.swimlane-content {
+  grid-column: timeline;
+  display: grid;
+  grid-template-columns: repeat(30, minmax(100px, 1fr));
+  position: relative;
+  padding: 0.5rem;
+}
+
+.task-card {
+  background: #e7f6e7;
+  border-radius: 0.25rem;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+  padding: 0.5rem;
+  position: absolute;
+  min-width: 120px;
+  z-index: 1;
+}
