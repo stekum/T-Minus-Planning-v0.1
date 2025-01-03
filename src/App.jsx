@@ -1,11 +1,66 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { differenceInSeconds, format } from 'date-fns';
 import { CircularProgressbar, buildStyles } from 'react-circular-progressbar';
 import 'react-circular-progressbar/dist/styles.css';
 
 const teamMembers = ['Gemeinsam', 'Vera', 'Stefan', 'Alex', 'tbd'];
 
-function TaskForm({ onAddTask }) {
+const EditableTitle = ({ initialTitle, onSave }) => {
+  const [isEditing, setIsEditing] = useState(false);
+  const [title, setTitle] = useState(initialTitle);
+  const inputRef = useRef(null);
+
+  useEffect(() => {
+    if (isEditing && inputRef.current) {
+      inputRef.current.focus();
+      inputRef.current.select();
+    }
+  }, [isEditing]);
+
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    if (title.trim()) {
+      onSave(title);
+      setIsEditing(false);
+    }
+  };
+
+  const handleKeyDown = (e) => {
+    if (e.key === 'Escape') {
+      setTitle(initialTitle);
+      setIsEditing(false);
+    }
+  };
+
+  if (isEditing) {
+    return (
+      <form onSubmit={handleSubmit} className="inline-block">
+        <input
+          ref={inputRef}
+          type="text"
+          value={title}
+          onChange={(e) => setTitle(e.target.value)}
+          onBlur={handleSubmit}
+          onKeyDown={handleKeyDown}
+          className="text-2xl font-bold p-1 border rounded"
+          style={{ width: Math.max(200, title.length * 12) + 'px' }}
+        />
+      </form>
+    );
+  }
+
+  return (
+    <h1 
+      className="text-2xl font-bold mb-4 hover:bg-gray-100 p-1 rounded cursor-pointer"
+      onClick={() => setIsEditing(true)}
+      title="Click to edit"
+    >
+      {title}
+    </h1>
+  );
+};
+
+const TaskForm = ({ onAddTask }) => {
   const [taskName, setTaskName] = useState('');
   const [subtitle, setSubtitle] = useState('');
   const [dueDate, setDueDate] = useState('');
@@ -66,15 +121,15 @@ function TaskForm({ onAddTask }) {
       </button>
     </div>
   );
-}
+};
 
-function Timeline({ targetDate }) {
+const Timeline = ({ targetDate }) => {
   if (!targetDate) return null;
 
   const generateTimelineData = () => {
     const days = [];
-    const phases = [];
     let currentDate = new Date(targetDate);
+    currentDate.setHours(0, 0, 0, 0);
     
     // Generate 30 days backwards from target date
     for (let i = 29; i >= 0; i--) {
@@ -82,22 +137,15 @@ function Timeline({ targetDate }) {
       date.setDate(date.getDate() - i);
       days.push({
         date,
-        label: format(date, 'EEE, dd.MM.')
-      });
-    }
-
-    // Calculate T-minus phases
-    for (let i = 29; i >= 0; i -= 3) {
-      phases.push({
-        tMinus: i,
-        isEven: Math.floor(i / 3) % 2 === 0
+        label: format(date, 'EEE, dd.MM.'),
+        tMinus: i
       });
     }
     
-    return { days, phases };
+    return days;
   };
 
-  const { days, phases } = generateTimelineData();
+  const days = generateTimelineData();
 
   return (
     <>
@@ -111,20 +159,20 @@ function Timeline({ targetDate }) {
       </div>
       <div className="timeline-phases">
         <div className="timeline-phase-label"></div>
-        {phases.map((phase, index) => (
+        {days.map((day, index) => (
           <div 
             key={index} 
-            className={`timeline-phase ${phase.isEven ? 'bg-cyan-400' : 'bg-lime-400'}`}
+            className={`timeline-phase ${index % 2 === 0 ? 'bg-cyan-400' : 'bg-lime-400'}`}
           >
-            T-{phase.tMinus}
+            T-{day.tMinus}
           </div>
         ))}
       </div>
     </>
   );
-}
+};
 
-function Swimlane({ member, tasks, onDeleteTask, onEditTask, startDate }) {
+const Swimlane = ({ member, tasks, onDeleteTask, onEditTask, startDate }) => {
   const calculateTaskPosition = (task) => {
     const taskDate = new Date(task.dueDate);
     const dayIndex = Math.floor((taskDate - startDate) / (1000 * 60 * 60 * 24));
@@ -154,11 +202,12 @@ function Swimlane({ member, tasks, onDeleteTask, onEditTask, startDate }) {
       </div>
     </div>
   );
-}
+};
 
-function App() {
+const App = () => {
   const [tasks, setTasks] = useState([]);
   const [targetDate] = useState(new Date('2025-01-31T15:09:00'));
+  const [title, setTitle] = useState('T-Minus Plan AWS Antrag V1');
   const startDate = new Date(targetDate);
   startDate.setDate(startDate.getDate() - 29);
 
@@ -185,7 +234,10 @@ function App() {
 
   return (
     <div className="app-container">
-      <h1 className="text-2xl font-bold mb-4">T-Minus Plan AWS Antrag V1</h1>
+      <EditableTitle 
+        initialTitle={title} 
+        onSave={setTitle}
+      />
       <div className="mb-4">
         <div className="flex items-center gap-4">
           <h2 className="text-xl">Target Date: {targetDate.toLocaleString()}</h2>
@@ -221,6 +273,6 @@ function App() {
       </div>
     </div>
   );
-}
+};
 
 export default App;

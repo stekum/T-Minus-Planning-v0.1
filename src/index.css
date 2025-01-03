@@ -27,7 +27,7 @@
   border-right: 1px solid #e5e7eb;
 }
 
-.timeline-date:first-child {
+.timeline-date-label {
   border-right: 2px solid #e5e7eb;
 }
 
@@ -41,8 +41,11 @@
   text-align: center;
   font-size: 0.875rem;
   color: white;
-  grid-column: span 3;
   border-right: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.timeline-phase-label {
+  border-right: 2px solid #e5e7eb;
 }
 
 .swimlanes {
